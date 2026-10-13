@@ -1,4 +1,5 @@
 #include "CounterSpell.h"
+#include "Player.h"
 #include "StandardAttack.h"
 #include "TurnEngine.h"
 
@@ -14,6 +15,8 @@ void showMenu() {
               << "3. Resolve the next action\n"
               << "4. Resolve all actions\n"
               << "5. Show the resolution line\n"
+              << "6. View player information\n"
+              << "7. Set player information\n"
               << "0. Quit\n"
               << "Choice: ";
 }
@@ -21,6 +24,7 @@ void showMenu() {
 
 int main() {
     TurnEngine engine;
+    Player player;
     bool running = true;
 
     while (running) {
@@ -30,7 +34,7 @@ int main() {
             if (std::cin.eof()) {
                 break;
             }
-            std::cout << "Please enter a number from 0 to 5.\n";
+            std::cout << "Please enter a number from 0 to 7.\n";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             continue;
@@ -38,7 +42,7 @@ int main() {
 
         switch (choice) {
         case 1:
-            engine.enqueue(new StandardAttack());
+            engine.enqueue(new StandardAttack(player));
             std::cout << "Standard attack added to the back of the line.\n";
             break;
         case 2:
@@ -87,11 +91,49 @@ int main() {
         case 5:
             engine.displayQueue();
             break;
+        case 6:
+            std::cout << "Player: " << player.getName()
+                      << " | Health: " << player.getHealth();
+            if (player.isDefeated()) {
+                std::cout << " (defeated)";
+            }
+            std::cout << '\n';
+            break;
+        case 7:
+            {
+                std::string name;
+                int health = 0;
+                std::cout << "Player name: ";
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::getline(std::cin, name);
+                std::cout << "Player health: ";
+                if (!(std::cin >> health)) {
+                    std::cout << "Invalid health. Player information was not changed.\n";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    break;
+                }
+                try {
+                    if (name.empty()) {
+                        throw std::invalid_argument("Player name cannot be empty.");
+                    }
+                    if (health < 0) {
+                        throw std::invalid_argument("Player health cannot be negative.");
+                    }
+                    player.setName(name);
+                    player.setHealth(health);
+                    std::cout << "Player information updated.\n";
+                } catch (const std::invalid_argument& error) {
+                    std::cout << error.what()
+                              << " Player information was not changed.\n";
+                }
+            }
+            break;
         case 0:
             running = false;
             break;
         default:
-            std::cout << "Please enter a number from 0 to 5.\n";
+            std::cout << "Please enter a number from 0 to 7.\n";
             break;
         }
     }
